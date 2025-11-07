@@ -1,0 +1,56 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-book-table
+      author: system
+      changes:
+        - createTable:
+            tableName: book
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: author
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: create-book-price-table
+      author: system
+      changes:
+        - createTable:
+            tableName: book_price
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: price_usd
+                  type: NUMERIC(10,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_price_update
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: true
+        - addForeignKeyConstraint:
+            baseTableName: book_price
+            baseColumnNames: id
+            referencedTableName: book
+            referencedColumnNames: id
+            constraintName: fk_book_price_book
+            onDelete: CASCADE
+
