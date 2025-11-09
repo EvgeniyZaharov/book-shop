@@ -12,6 +12,7 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: true
+    open-in-view: false
     properties:
       hibernate:
         format_sql: true
@@ -21,6 +22,12 @@ spring:
 
   cache:
     type: caffeine
+    caffeine:
+      spec: maximumSize=100,expireAfterWrite=24h
+
+currency:
+  api:
+    url: https://cbr.ru/scripts/XML_daily.asp
 
 logging:
   level:

@@ -14,4 +14,3 @@ public class BookResponse {
     BigDecimal priceUsd;
     BigDecimal priceRub;
 }
-
