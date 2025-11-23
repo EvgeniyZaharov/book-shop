@@ -152,7 +152,6 @@ class CurrencyServiceImplTest {
     @Test
     @SuppressWarnings("rawtypes")
     void getUsdRate_WithVunitRateField_ShouldIgnoreUnknownField() {
-        // XML с полем VunitRate, которое возвращает реальный API ЦБ РФ
         String xmlWithVunitRate = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <ValCurs Date="07.11.2025" name="Foreign Currency Market">

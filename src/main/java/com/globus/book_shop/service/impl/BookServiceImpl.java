@@ -1,5 +1,6 @@
 package com.globus.book_shop.service.impl;
 
+import com.globus.book_shop.dto.BookEvent;
 import com.globus.book_shop.dto.BookRequest;
 import com.globus.book_shop.dto.BookResponse;
 import com.globus.book_shop.dto.PagedBookResponse;
@@ -9,6 +10,7 @@ import com.globus.book_shop.entity.BookPrice;
 import com.globus.book_shop.exception.BookNotFoundException;
 import com.globus.book_shop.exception.BookPriceNotFoundException;
 import com.globus.book_shop.mapper.BookMapper;
+import com.globus.book_shop.messaging.BookEventProducer;
 import com.globus.book_shop.repository.BookPriceRepository;
 import com.globus.book_shop.repository.BookRepository;
 import com.globus.book_shop.service.BookService;
@@ -34,6 +36,7 @@ public class BookServiceImpl implements BookService {
     private final BookPriceRepository bookPriceRepository;
     private final BookMapper bookMapper;
     private final CurrencyService currencyService;
+    private final BookEventProducer bookEventProducer;
 
     @Override
     @Transactional(readOnly = true)
@@ -80,6 +83,17 @@ public class BookServiceImpl implements BookService {
         book.setBookPrice(bookPrice);
         
         BookResponse response = toResponse(book);
+        
+        BookEvent event = BookEvent.builder()
+                .bookId(response.getId())
+                .title(response.getTitle())
+                .author(response.getAuthor())
+                .priceUsd(response.getPriceUsd())
+                .eventType(BookEvent.EventType.CREATED)
+                .timestamp(LocalDateTime.now())
+                .build();
+        bookEventProducer.sendBookEvent(event);
+        
         log.info("Book created successfully - id: {}, title: {}", response.getId(), response.getTitle());
         return response;
     }
@@ -101,6 +115,17 @@ public class BookServiceImpl implements BookService {
         log.debug("BookPrice updated in database");
         
         BookResponse response = toResponse(book);
+        
+        BookEvent event = BookEvent.builder()
+                .bookId(response.getId())
+                .title(response.getTitle())
+                .author(response.getAuthor())
+                .priceUsd(response.getPriceUsd())
+                .eventType(BookEvent.EventType.UPDATED)
+                .timestamp(LocalDateTime.now())
+                .build();
+        bookEventProducer.sendBookEvent(event);
+        
         log.info("Book updated successfully - id: {}", id);
         return response;
     }
@@ -118,6 +143,17 @@ public class BookServiceImpl implements BookService {
         log.debug("BookPrice updated - old price: {}, new price: {}", oldPrice, request.getPriceUsd());
         
         BookResponse response = toResponse(book);
+        
+        BookEvent event = BookEvent.builder()
+                .bookId(response.getId())
+                .title(response.getTitle())
+                .author(response.getAuthor())
+                .priceUsd(response.getPriceUsd())
+                .eventType(BookEvent.EventType.PRICE_UPDATED)
+                .timestamp(LocalDateTime.now())
+                .build();
+        bookEventProducer.sendBookEvent(event);
+        
         log.info("Price updated successfully for book id: {} - new price: {}", id, request.getPriceUsd());
         return response;
     }
@@ -125,12 +161,27 @@ public class BookServiceImpl implements BookService {
     @Override
     public void delete(Long id) {
         log.debug("Deleting book with id: {}", id);
-        bookRepository.findById(id)
+        Book book = bookRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Book with id {} not found for deletion", id);
                     return new BookNotFoundException(id);
                 });
+        
+        BookPrice bookPrice = book.getBookPrice();
+        BigDecimal priceUsd = bookPrice != null ? bookPrice.getPriceUsd() : null;
+        
         bookRepository.deleteById(id);
+        
+        BookEvent event = BookEvent.builder()
+                .bookId(id)
+                .title(book.getTitle())
+                .author(book.getAuthor())
+                .priceUsd(priceUsd)
+                .eventType(BookEvent.EventType.DELETED)
+                .timestamp(LocalDateTime.now())
+                .build();
+        bookEventProducer.sendBookEvent(event);
+        
         log.info("Book deleted successfully - id: {}", id);
     }
 
