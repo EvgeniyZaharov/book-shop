@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+  cache:
+    type: none
+
+currency:
+  api:
+    url: https://cbr.ru/scripts/XML_daily.asp
+
+logging:
+  level:
+    com.globus.book_shop: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+
+
